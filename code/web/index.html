@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Weather Code Finder</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+  html, body, #map {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  #controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1000;
+  }
+  #result {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    display: none;
+  }
+  #result .close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+  }
+  #weatherInfo {
+    margin-bottom: 10px;
+  }
+  #weatherInfo img {
+    max-width: 50px;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="controls">
+  <input type="text" id="date" placeholder="Select Date">
+  <button id="getWeatherCode">Get Weather Code</button>
+</div>
+
+<div id="result">
+  <span class="close-button" onclick="closeResultBox()">&times;</span>
+  <div id="weatherInfo"></div> <p id="weatherCodeOutput"></p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+  let selectedCoordinates = null;
+  let selectedDate = null;
+
+  const map = L.map('map').setView([37.7749, -122.4194], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  map.on('click', (e) => {
+    selectedCoordinates = e.latlng;
+    L.marker(e.latlng).addTo(map)
+      .bindPopup("Selected Location").openPopup();
+    console.log("Selected Coordinates:", selectedCoordinates);
+  });
+
+  flatpickr("#date", {
+    enableTime: false,
+    dateFormat: "Y-m-d",
+    onChange: function(selectedDates, dateStr, instance) {
+      selectedDate = dateStr;
+      console.log("Selected Date:", selectedDate);
+    }
+  });
+
+  document.getElementById('getWeatherCode').addEventListener('click', () => {
+    if (selectedCoordinates && selectedDate) {
+      const apiUrl = `/api?lat=${selectedCoordinates.lat}&lon=${selectedCoordinates.lng}&date=${selectedDate}`; // **REPLACE WITH YOUR API ENDPOINT**
+
+      fetch(apiUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log("Weather Data:", data);
+
+          const weatherInfoDiv = document.getElementById('weatherInfo');
+          weatherInfoDiv.innerHTML = "";
+
+          let weatherDescription = "";
+
+          if (data.day && data.day.description) {
+            weatherDescription = data.day.description;
+          }
+
+          weatherInfoDiv.textContent = weatherDescription || "Weather information not available";
+          document.getElementById('weatherCodeOutput').textContent = ""; // Clear weather code
+          document.getElementById('result').style.display = 'block';
+        })
+        .catch(error => {
+          console.error("Error fetching weather code:", error);
+          document.getElementById('weatherCodeOutput').textContent = "Error fetching weather code. Please try again.";
+          document.getElementById('result').style.display = 'block';
+        });
+
+    } else {
+      alert("Please select a location and date.");
+    }
+  });
+
+  function closeResultBox() {
+    document.getElementById('result').style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
