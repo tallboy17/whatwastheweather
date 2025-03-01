@@ -1,0 +1,27 @@
+# Python-related
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual environment folder (if you're using venv)
+venv/
+env/
+tutorial-env/
+
+# IDE/editor files (VS Code, PyCharm, etc.)
+.vscode/
+.idea/
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# FastAPI-related
+*.db
+
+# Cache files (requests_cache)
+.cache/
+
+# Other files you might not want to track
+*.log
+*.bak
+*.swp
